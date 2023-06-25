@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+option csharp_namespace = "HealthCare.Documents.Api.Protos";
+
+package DocumentSearch;
+// Document Service
+service DocumentService {
+    // Gets all documents
+  rpc GetAll (PatientId) returns (DocumentList);
+  // Gets a document
+  rpc Get (DocumentId) returns (Document);
+  // inserts a document
+  rpc Insert (Document) returns (Empty);
+  // Updates a document
+  rpc Update (Document) returns (Empty);
+  // Deletes a document
+  rpc Delete (DocumentId) returns (Empty);
+}
+
+message Empty{}
+// Document Model
+message Document {
+  string id = 1;
+  string patientId = 2;
+  string name = 3;
+  string path = 4;
+}
+
+message AddDocument {
+  string patientId = 2;
+  string name = 3;
+  string path = 4;
+}
+
+message DocumentList{
+    repeated Document documents = 1; 
+}
+
+message DocumentId {
+  string id = 1;
+}
+
+message PatientId {
+  string patientId = 1;
+}
