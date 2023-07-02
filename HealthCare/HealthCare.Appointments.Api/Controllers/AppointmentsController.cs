@@ -2,7 +2,9 @@
 using HealthCare.Appointments.Api.Constants;
 using HealthCare.Appointments.Api.Dtos;
 using HealthCare.Appointments.Api.Models;
+using HealthCare.Appointments.Api.Repositories;
 using HealthCare.Appointments.Api.Service;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,44 +14,52 @@ namespace HealthCare.Appointments.Api.Controllers
     [ApiController]
     public class AppointmentsController : ControllerBase
     {
-        private readonly AppointmentsDbContext _context;
         private readonly IDoctorsApiRepository _doctorsApiRepository;
         private readonly IPatientsApiRepository _patientsApiRepository;
         private readonly ApiEndpoints _apiEndpoints;
         private readonly IMapper _mapper;
+        private readonly IPublishEndpoint _publishEndpoint;
+        private readonly IMessagePublisher _messageBus;
+        private readonly IAppointmentRepository _appointmentRepository;
 
-        public AppointmentsController(AppointmentsDbContext context,
-            IDoctorsApiRepository doctorsApiRepository,
+
+        public AppointmentsController(IDoctorsApiRepository doctorsApiRepository,
             IPatientsApiRepository patientsApiRepository,
             ApiEndpoints apiEndpoints,
-            IMapper mapper)
+            IMapper mapper,
+            IAppointmentRepository appointmentRepository,
+            IPublishEndpoint publishEndpoint,
+            IMessagePublisher messageBus)
         {
-            _context = context;
             this._doctorsApiRepository = doctorsApiRepository;
             _patientsApiRepository = patientsApiRepository;
             this._apiEndpoints = apiEndpoints;
             this._mapper = mapper;
+            _publishEndpoint = publishEndpoint;
+            this._messageBus = messageBus;
+            _appointmentRepository = appointmentRepository;
+
         }
 
         // GET: api/Appointments
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Appointment>>> GetAppointments()
         {
-            return await _context.Appointments.ToListAsync();
+            return await _appointmentRepository.GetAll();
         }
 
         // GET: api/Appointments/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<AppointmentDetailsDto>> GetAppointment(Guid id)
+        public async Task<ActionResult<AppointmentDetailsDto>> GetAppointment(string id)
         {
-            var appointment = await _context.Appointments.FindAsync(id);
+            var appointment = await _appointmentRepository.Get(id);
 
             if (appointment == null)
             {
                 return NotFound();
             }
 
-            var doctor = await _doctorsApiRepository.Get(_apiEndpoints.GetDoctorsApi(), appointment.DoctorId.ToString());
+            var doctor = await _doctorsApiRepository.Get(_apiEndpoints.GetDocumentsApi(), appointment.DoctorId.ToString());
             var patient = await _patientsApiRepository.Get(_apiEndpoints.GetPatientsApi(), appointment.PatientId.ToString());
             var appointmentDto = _mapper.Map<AppointmentDetailsDto>(appointment);
             appointmentDto.Doctor = _mapper.Map<DoctorDto>(doctor);
@@ -60,22 +70,20 @@ namespace HealthCare.Appointments.Api.Controllers
         // PUT: api/Appointments/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutAppointment(Guid id, Appointment appointment)
+        public async Task<IActionResult> PutAppointment(string id, Appointment appointment)
         {
-            if (id != appointment.Id)
+            if (id != appointment.Id.ToString())
             {
                 return BadRequest();
             }
 
-            _context.Entry(appointment).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _appointmentRepository.Update(appointment);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!AppointmentExists(id))
+                if (!await AppointmentExistsAsync(id))
                 {
                     return NotFound();
                 }
@@ -91,33 +99,48 @@ namespace HealthCare.Appointments.Api.Controllers
         // POST: api/Appointments
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Appointment>> PostAppointment(Appointment appointment)
+        public async Task<IActionResult> CreateAppointment(AppointmentDto appointmentDto)
         {
-            _context.Appointments.Add(appointment);
-            await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetAppointment", new { id = appointment.Id }, appointment);
+            var appointment = _mapper.Map<Appointment>(appointmentDto);
+
+            //await _appointmentRepository.Add(appointment);
+
+            var appointmentMessage = new AppointmentMessage()
+            {
+                Id = appointment.Id,
+                CustomerId = appointment.PatientId,
+                DoctorId = appointment.DoctorId,
+                Date = appointment.Start
+            };
+
+            // Publish to RabbitMQ with MassTransit
+            await _publishEndpoint.Publish(appointmentMessage);
+
+            // Publish to Azure Service Bus
+            await _messageBus.PublishMessage(appointmentMessage, "appointments");
+            return Ok();
         }
+
 
         // DELETE: api/Appointments/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAppointment(Guid id)
+        public async Task<IActionResult> DeleteAppointment(string id)
         {
-            var appointment = await _context.Appointments.FindAsync(id);
+            var appointment = await _appointmentRepository.Get(id);
             if (appointment == null)
             {
                 return NotFound();
             }
 
-            _context.Appointments.Remove(appointment);
-            await _context.SaveChangesAsync();
+            await _appointmentRepository.Delete(id);
 
             return NoContent();
         }
 
-        private bool AppointmentExists(Guid id)
+        private async Task<bool> AppointmentExistsAsync(string id)
         {
-            return _context.Appointments.Any(e => e.Id == id);
+            return await _appointmentRepository.Exists(id);
         }
     }
 }
