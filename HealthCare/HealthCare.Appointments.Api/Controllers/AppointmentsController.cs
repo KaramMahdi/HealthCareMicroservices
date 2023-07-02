@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using HealthCare.Appointments.Api.Constants;
+using HealthCare.Appointments.Api.Dtos;
+using HealthCare.Appointments.Api.Models;
+using HealthCare.Appointments.Api.Service;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using HealthCare.Appointments.Api.Models;
 
 namespace HealthCare.Appointments.Api.Controllers
 {
@@ -14,10 +13,22 @@ namespace HealthCare.Appointments.Api.Controllers
     public class AppointmentsController : ControllerBase
     {
         private readonly AppointmentsDbContext _context;
+        private readonly IDoctorsApiRepository _doctorsApiRepository;
+        private readonly IPatientsApiRepository _patientsApiRepository;
+        private readonly ApiEndpoints _apiEndpoints;
+        private readonly IMapper _mapper;
 
-        public AppointmentsController(AppointmentsDbContext context)
+        public AppointmentsController(AppointmentsDbContext context,
+            IDoctorsApiRepository doctorsApiRepository,
+            IPatientsApiRepository patientsApiRepository,
+            ApiEndpoints apiEndpoints,
+            IMapper mapper)
         {
             _context = context;
+            this._doctorsApiRepository = doctorsApiRepository;
+            _patientsApiRepository = patientsApiRepository;
+            this._apiEndpoints = apiEndpoints;
+            this._mapper = mapper;
         }
 
         // GET: api/Appointments
@@ -29,7 +40,7 @@ namespace HealthCare.Appointments.Api.Controllers
 
         // GET: api/Appointments/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Appointment>> GetAppointment(Guid id)
+        public async Task<ActionResult<AppointmentDetailsDto>> GetAppointment(Guid id)
         {
             var appointment = await _context.Appointments.FindAsync(id);
 
@@ -38,7 +49,12 @@ namespace HealthCare.Appointments.Api.Controllers
                 return NotFound();
             }
 
-            return appointment;
+            var doctor = await _doctorsApiRepository.Get(_apiEndpoints.GetDoctorsApi(), appointment.DoctorId.ToString());
+            var patient = await _patientsApiRepository.Get(_apiEndpoints.GetPatientsApi(), appointment.PatientId.ToString());
+            var appointmentDto = _mapper.Map<AppointmentDetailsDto>(appointment);
+            appointmentDto.Doctor = _mapper.Map<DoctorDto>(doctor);
+            appointmentDto.Patient = _mapper.Map<PatientDto>(patient);
+            return appointmentDto;
         }
 
         // PUT: api/Appointments/5

@@ -1,9 +1,32 @@
 ﻿using HealthCare.SharedAssets;
+using System;
 
 namespace HealthCare.Appointments.Api.Models
 {
     public class Appointment : BaseEntity<Guid>
     {
+        public Appointment(Guid id,
+          int appointmentTypeId,
+          Guid doctorId,
+          Guid patientId,
+          Guid roomId,
+          DateTime start,
+          DateTime end,
+          string title,
+          DateTime? dateTimeConfirmed = null)
+        {
+            Id = id;
+            AppointmentTypeId = appointmentTypeId;
+            DoctorId = doctorId;
+            PatientId = patientId;
+            RoomId = roomId;
+            Start = start;
+            End = end;
+            Title = title;
+            DateTimeConfirmed = dateTimeConfirmed;
+        }
+
+        private Appointment() { }
 
         public Guid PatientId { get; private set; }
         public Guid RoomId { get; private set; }
@@ -16,27 +39,7 @@ namespace HealthCare.Appointments.Api.Models
         public string Title { get; private set; }
         public DateTime? DateTimeConfirmed { get; set; }
         public bool IsPotentiallyConflicting { get; set; }
-        private Appointment() { }
-        public Appointment(Guid id,
-    int appointmentTypeId,
-    Guid doctorId,
-    Guid patientId,
-    Guid roomId,
-    DateTime start,
-    DateTime end,
-    string title,
-    DateTime? dateTimeConfirmed = null)
-        {
-            Id = id;
-            AppointmentTypeId = appointmentTypeId;
-            DoctorId = doctorId;
-            PatientId = patientId;
-            RoomId = roomId;
-            Start = start;
-            End = end;
-            Title = title;
-            DateTimeConfirmed = dateTimeConfirmed;
-        }
+
         public void UpdateRoom(Guid newRoomId)
         {
             if (newRoomId == RoomId) return;
@@ -50,8 +53,9 @@ namespace HealthCare.Appointments.Api.Models
 
             DoctorId = newDoctorId;
         }
+
         public void UpdateStartTime(DateTime newStartTime,
-         Action scheduleHandler)
+          Action scheduleHandler)
         {
             if (newStartTime == Start) return;
 
@@ -67,6 +71,7 @@ namespace HealthCare.Appointments.Api.Models
             Title = newTitle;
 
         }
+
         public void Confirm(DateTime dateConfirmed)
         {
             if (DateTimeConfirmed.HasValue) return;
