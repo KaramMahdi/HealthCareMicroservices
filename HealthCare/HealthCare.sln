@@ -13,6 +13,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HealthCare.Documents.Api", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HealthCare.Doctors.Api", "HealthCare.Doctors.Api\HealthCare.Doctors.Api.csproj", "{E29BEDD6-A8E2-436B-982B-26ADEBFBDCBB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppointmentCreatedAzureServiceBusConsumer", "AppointmentCreatedAzureServiceBusConsumer\AppointmentCreatedAzureServiceBusConsumer.csproj", "{C778FA2D-AFB6-4D43-AEBB-82141713C13E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppointmentCreatedConsumer", "AppointmentCreatedConsumer\AppointmentCreatedConsumer.csproj", "{3C6C87A1-FF8E-4FC8-B063-70F304415672}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureServiceBusConsumerWorkerService", "AzureServiceBusConsumerWorkerService\AzureServiceBusConsumerWorkerService.csproj", "{BFE79043-543C-4126-89F4-B27A66E8D699}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +45,18 @@ Global
 		{E29BEDD6-A8E2-436B-982B-26ADEBFBDCBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E29BEDD6-A8E2-436B-982B-26ADEBFBDCBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E29BEDD6-A8E2-436B-982B-26ADEBFBDCBB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C778FA2D-AFB6-4D43-AEBB-82141713C13E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C778FA2D-AFB6-4D43-AEBB-82141713C13E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C778FA2D-AFB6-4D43-AEBB-82141713C13E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C778FA2D-AFB6-4D43-AEBB-82141713C13E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C6C87A1-FF8E-4FC8-B063-70F304415672}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C6C87A1-FF8E-4FC8-B063-70F304415672}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C6C87A1-FF8E-4FC8-B063-70F304415672}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C6C87A1-FF8E-4FC8-B063-70F304415672}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BFE79043-543C-4126-89F4-B27A66E8D699}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFE79043-543C-4126-89F4-B27A66E8D699}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFE79043-543C-4126-89F4-B27A66E8D699}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFE79043-543C-4126-89F4-B27A66E8D699}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
